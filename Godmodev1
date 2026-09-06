@@ -1,0 +1,216 @@
+-- ==========================================
+-- 🌈 NOOBHUB GODMODE - RAINBOW PRO V2 🌈
+-- Cập nhật: Nút Ẩn/Hiện + Godmode Chống Lỗi
+-- ==========================================
+
+local CoreGui = game:GetService("CoreGui")
+local Players = game:GetService("Players")
+local RunService = game:GetService("RunService")
+
+local Player = Players.LocalPlayer
+
+-- Xóa menu cũ nếu chạy lại script
+for _, v in pairs(CoreGui:GetChildren()) do
+    if v.Name == "NoobHubMenu" then v:Destroy() end
+end
+
+-- 1. Tạo Giao Diện Chính
+local ScreenGui = Instance.new("ScreenGui")
+ScreenGui.Name = "NoobHubMenu"
+ScreenGui.Parent = CoreGui
+ScreenGui.ResetOnSpawn = false
+
+-- 2. Nút Mở Menu (Nổi trên màn hình)
+local OpenBtn = Instance.new("TextButton")
+OpenBtn.Size = UDim2.new(0, 50, 0, 50)
+OpenBtn.Position = UDim2.new(0, 20, 0, 20)
+OpenBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+OpenBtn.Text = "👑"
+OpenBtn.Font = Enum.Font.GothamBold
+OpenBtn.TextSize = 25
+OpenBtn.Active = true
+OpenBtn.Draggable = true
+OpenBtn.Visible = false -- Ẩn lúc đầu vì menu chính đang mở
+OpenBtn.Parent = ScreenGui
+
+local OpenCorner = Instance.new("UICorner")
+OpenCorner.CornerRadius = UDim.new(1, 0) -- Nút tròn
+OpenCorner.Parent = OpenBtn
+
+local OpenStroke = Instance.new("UIStroke")
+OpenStroke.Thickness = 3
+OpenStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+OpenStroke.Parent = OpenBtn
+
+-- 3. Khung Menu Chính
+local MainFrame = Instance.new("Frame")
+MainFrame.Size = UDim2.new(0, 320, 0, 190)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -95)
+MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
+MainFrame.Active = true
+MainFrame.Draggable = true
+MainFrame.Parent = ScreenGui
+
+local UICorner = Instance.new("UICorner")
+UICorner.CornerRadius = UDim.new(0, 15)
+UICorner.Parent = MainFrame
+
+-- Nút Tắt (X) trên Menu Chính
+local CloseBtn = Instance.new("TextButton")
+CloseBtn.Size = UDim2.new(0, 30, 0, 30)
+CloseBtn.Position = UDim2.new(1, -35, 0, 5)
+CloseBtn.BackgroundTransparency = 1
+CloseBtn.Text = "✖"
+CloseBtn.Font = Enum.Font.GothamBold
+CloseBtn.TextColor3 = Color3.fromRGB(255, 255, 255)
+CloseBtn.TextSize = 20
+CloseBtn.Parent = MainFrame
+
+-- Logic Ẩn/Hiện Menu
+CloseBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = false
+    OpenBtn.Visible = true
+end)
+
+OpenBtn.MouseButton1Click:Connect(function()
+    MainFrame.Visible = true
+    OpenBtn.Visible = false
+end)
+
+-- 4. HIỆU ỨNG CẦU VỒNG
+local function applyRainbow(instance)
+    local gradient = Instance.new("UIGradient")
+    gradient.Color = ColorSequence.new({
+        ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
+        ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 127, 0)),
+        ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)),
+        ColorSequenceKeypoint.new(0.5, Color3.fromRGB(0, 255, 0)),
+        ColorSequenceKeypoint.new(0.66, Color3.fromRGB(0, 0, 255)),
+        ColorSequenceKeypoint.new(0.83, Color3.fromRGB(75, 0, 130)),
+        ColorSequenceKeypoint.new(1, Color3.fromRGB(148, 0, 211))
+    })
+    gradient.Parent = instance
+    return gradient
+end
+
+local BgGradient = applyRainbow(MainFrame)
+
+local UIStroke = Instance.new("UIStroke")
+UIStroke.Thickness = 6
+UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
+UIStroke.Parent = MainFrame
+local StrokeGradient = applyRainbow(UIStroke)
+
+local OpenBtnStrokeGradient = applyRainbow(OpenStroke)
+
+local rotation = 0
+RunService.RenderStepped:Connect(function(dt)
+    rotation = rotation + (dt * 45)
+    if rotation >= 360 then rotation = 0 end
+    BgGradient.Rotation = rotation
+    StrokeGradient.Rotation = -rotation
+    OpenBtnStrokeGradient.Rotation = rotation
+end)
+
+-- 5. Tiêu đề NoobHub
+local Title = Instance.new("TextLabel")
+Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Position = UDim2.new(0, 0, 0, 5)
+Title.BackgroundTransparency = 1
+Title.Text = "👑 NoobHub 👑"
+Title.Font = Enum.Font.FredokaOne
+Title.TextSize = 32
+Title.TextColor3 = Color3.fromRGB(255, 255, 255)
+Title.TextStrokeTransparency = 0
+Title.Parent = MainFrame
+
+local SubTitle = Instance.new("TextLabel")
+SubTitle.Size = UDim2.new(1, 0, 0, 20)
+SubTitle.Position = UDim2.new(0, 0, 0, 45)
+SubTitle.BackgroundTransparency = 1
+SubTitle.Text = "V.I.P Godmode Script"
+SubTitle.Font = Enum.Font.GothamBold
+SubTitle.TextSize = 14
+SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
+SubTitle.TextStrokeTransparency = 0.2
+SubTitle.Parent = MainFrame
+
+-- 6. Nút Bật/Tắt Godmode
+local ToggleBtn = Instance.new("TextButton")
+ToggleBtn.Size = UDim2.new(0, 220, 0, 45)
+ToggleBtn.Position = UDim2.new(0.5, -110, 0, 100)
+ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ToggleBtn.Text = "🔴 Godmode: TẮT"
+ToggleBtn.Font = Enum.Font.GothamBold
+ToggleBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+ToggleBtn.TextSize = 18
+ToggleBtn.Parent = MainFrame
+
+local BtnCorner = Instance.new("UICorner")
+BtnCorner.CornerRadius = UDim.new(0, 8)
+BtnCorner.Parent = ToggleBtn
+
+local BtnStroke = Instance.new("UIStroke")
+BtnStroke.Thickness = 2
+BtnStroke.Color = Color3.fromRGB(255, 255, 255)
+BtnStroke.Parent = ToggleBtn
+
+-- 7. GODMODE XỊN (Vô hiệu hóa cái chết + Bơm máu liên tục)
+local godmodeEnabled = false
+local godmodeLoop = nil
+
+local function updateGodmode(state)
+    local char = Player.Character
+    local hum = char and char:FindFirstChild("Humanoid")
+    
+    if state then
+        if hum then
+            -- Chống game nhận diện nhân vật đã chết
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+        end
+        -- Dùng vòng lặp siêu tốc bơm máu để chống sát thương theo thời gian (Tick damage)
+        if not godmodeLoop then
+            godmodeLoop = RunService.Heartbeat:Connect(function()
+                local c = Player.Character
+                local h = c and c:FindFirstChild("Humanoid")
+                if h then
+                    h.MaxHealth = math.huge
+                    h.Health = math.huge
+                end
+            end)
+        end
+    else
+        if hum then
+            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+            hum.MaxHealth = 100
+            hum.Health = 100
+        end
+        if godmodeLoop then
+            godmodeLoop:Disconnect()
+            godmodeLoop = nil
+        end
+    end
+end
+
+ToggleBtn.MouseButton1Click:Connect(function()
+    godmodeEnabled = not godmodeEnabled
+    if godmodeEnabled then
+        ToggleBtn.Text = "🟢 Godmode: ĐANG BẬT"
+        ToggleBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        updateGodmode(true)
+    else
+        ToggleBtn.Text = "🔴 Godmode: TẮT"
+        ToggleBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+        ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        updateGodmode(false)
+    end
+end)
+
+-- Tự bật lại Godmode nếu reset hoặc chuyển map
+Player.CharacterAdded:Connect(function(char)
+    if godmodeEnabled then
+        char:WaitForChild("Humanoid")
+        updateGodmode(true)
+    end
+end)
