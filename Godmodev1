@@ -1,6 +1,6 @@
 -- ==========================================
 -- 🌈 NOOBHUB GODMODE - RAINBOW PRO V2 🌈
--- Cập nhật: Nút Ẩn/Hiện + Godmode Chống Lỗi
+-- Tính năng: Menu cầu vồng, Nút thu nhỏ vương miện, Godmode Anti-Server (Clone Humanoid)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -9,18 +9,18 @@ local RunService = game:GetService("RunService")
 
 local Player = Players.LocalPlayer
 
--- Xóa menu cũ nếu chạy lại script
+-- Xóa menu cũ nếu chạy lại script để không bị đè UI
 for _, v in pairs(CoreGui:GetChildren()) do
     if v.Name == "NoobHubMenu" then v:Destroy() end
 end
 
--- 1. Tạo Giao Diện Chính
+-- 1. Tạo Giao Diện Chính (ScreenGui)
 local ScreenGui = Instance.new("ScreenGui")
 ScreenGui.Name = "NoobHubMenu"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- 2. Nút Mở Menu (Nổi trên màn hình)
+-- 2. Nút Mở Menu (Nổi trên màn hình - Vương Miện)
 local OpenBtn = Instance.new("TextButton")
 OpenBtn.Size = UDim2.new(0, 50, 0, 50)
 OpenBtn.Position = UDim2.new(0, 20, 0, 20)
@@ -34,7 +34,7 @@ OpenBtn.Visible = false -- Ẩn lúc đầu vì menu chính đang mở
 OpenBtn.Parent = ScreenGui
 
 local OpenCorner = Instance.new("UICorner")
-OpenCorner.CornerRadius = UDim.new(1, 0) -- Nút tròn
+OpenCorner.CornerRadius = UDim.new(1, 0) -- Bo tròn thành hình tròn
 OpenCorner.Parent = OpenBtn
 
 local OpenStroke = Instance.new("UIStroke")
@@ -55,7 +55,7 @@ local UICorner = Instance.new("UICorner")
 UICorner.CornerRadius = UDim.new(0, 15)
 UICorner.Parent = MainFrame
 
--- Nút Tắt (X) trên Menu Chính
+-- Nút Tắt (X) trên Menu Chính để thu nhỏ
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
 CloseBtn.Position = UDim2.new(1, -35, 0, 5)
@@ -77,7 +77,7 @@ OpenBtn.MouseButton1Click:Connect(function()
     OpenBtn.Visible = false
 end)
 
--- 4. HIỆU ỨNG CẦU VỒNG
+-- 4. HIỆU ỨNG CẦU VỒNG (Rainbow Gradient)
 local function applyRainbow(instance)
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
@@ -105,7 +105,7 @@ local OpenBtnStrokeGradient = applyRainbow(OpenStroke)
 
 local rotation = 0
 RunService.RenderStepped:Connect(function(dt)
-    rotation = rotation + (dt * 45)
+    rotation = rotation + (dt * 45) -- Tốc độ xoay màu cầu vồng
     if rotation >= 360 then rotation = 0 end
     BgGradient.Rotation = rotation
     StrokeGradient.Rotation = -rotation
@@ -155,39 +155,36 @@ BtnStroke.Thickness = 2
 BtnStroke.Color = Color3.fromRGB(255, 255, 255)
 BtnStroke.Parent = ToggleBtn
 
--- 7. GODMODE XỊN (Vô hiệu hóa cái chết + Bơm máu liên tục)
+-- 7. GODMODE XỊN (Nhân bản Humanoid đánh lừa Server)
 local godmodeEnabled = false
-local godmodeLoop = nil
 
 local function updateGodmode(state)
     local char = Player.Character
-    local hum = char and char:FindFirstChild("Humanoid")
-    
+    if not char then return end
+
     if state then
-        if hum then
-            -- Chống game nhận diện nhân vật đã chết
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-        end
-        -- Dùng vòng lặp siêu tốc bơm máu để chống sát thương theo thời gian (Tick damage)
-        if not godmodeLoop then
-            godmodeLoop = RunService.Heartbeat:Connect(function()
-                local c = Player.Character
-                local h = c and c:FindFirstChild("Humanoid")
-                if h then
-                    h.MaxHealth = math.huge
-                    h.Health = math.huge
-                end
-            end)
+        -- Kỹ thuật nhân bản Humanoid để cắt đứt liên kết sát thương với Server
+        local oldHum = char:FindFirstChildOfClass("Humanoid")
+        if oldHum then
+            local newHum = oldHum:Clone()
+            newHum.Parent = char
+            oldHum:Destroy() -- Phá hủy Humanoid gốc
+            
+            workspace.CurrentCamera.CameraSubject = newHum
+            Player.Character = char
+            
+            -- Buff máu lên vô hạn
+            newHum.MaxHealth = math.huge
+            newHum.Health = math.huge
+            
+            -- Vô hiệu hóa trạng thái chết
+            newHum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
         end
     else
+        -- Khi tắt, bắt buộc phải Reset nhân vật để server tải lại Humanoid chuẩn
+        local hum = char:FindFirstChildOfClass("Humanoid")
         if hum then
-            hum:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-            hum.MaxHealth = 100
-            hum.Health = 100
-        end
-        if godmodeLoop then
-            godmodeLoop:Disconnect()
-            godmodeLoop = nil
+            hum.Health = 0
         end
     end
 end
@@ -207,10 +204,18 @@ ToggleBtn.MouseButton1Click:Connect(function()
     end
 end)
 
--- Tự bật lại Godmode nếu reset hoặc chuyển map
+-- Tự động bật lại Godmode nếu chuyển map hoặc bị buộc reset
 Player.CharacterAdded:Connect(function(char)
     if godmodeEnabled then
-        char:WaitForChild("Humanoid")
+        task.wait(0.5) -- Đợi nhân vật tải xong
         updateGodmode(true)
     end
 end)
+
+-- Gửi thông báo khi Script chạy thành công
+local StarterGui = game:GetService("StarterGui")
+StarterGui:SetCore("SendNotification", {
+    Title = "👑 NoobHub Loaded",
+    Text = "Bấm dấu X để thu nhỏ menu thành vương miện!",
+    Duration = 5
+})
