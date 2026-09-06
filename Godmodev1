@@ -1,6 +1,6 @@
 -- ==========================================
--- 🌈 NOOBHUB GODMODE - RAINBOW PRO V3 🌈
--- Tính năng: Khóa Touch Damage + Auto Restore Health + UI Cầu vồng
+-- 🌈 NOOBGROUPDEV GODMODE - RAINBOW PRO V4 🌈
+-- Tính năng: Nút ẩn bằng Ảnh Logo + Auto Restore Health
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -20,14 +20,12 @@ ScreenGui.Name = "NoobHubMenu"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- 2. Nút Thu Nhỏ (Vương Miện)
-local OpenBtn = Instance.new("TextButton")
-OpenBtn.Size = UDim2.new(0, 50, 0, 50)
+-- 2. NÚT THU NHỎ BẰNG ẢNH LOGO
+local OpenBtn = Instance.new("ImageButton")
+OpenBtn.Size = UDim2.new(0, 60, 0, 60)
 OpenBtn.Position = UDim2.new(0, 20, 0, 20)
-OpenBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-OpenBtn.Text = "👑"
-OpenBtn.Font = Enum.Font.GothamBold
-OpenBtn.TextSize = 25
+OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
+OpenBtn.Image = "rbxassetid://135921149892821" -- Đã chèn ID Logo của bạn
 OpenBtn.Active = true
 OpenBtn.Draggable = true
 OpenBtn.Visible = false
@@ -79,8 +77,6 @@ end)
 local function applyRainbow(instance)
     local gradient = Instance.new("UIGradient")
     gradient.Color = ColorSequence.new({
-
-
         ColorSequenceKeypoint.new(0, Color3.fromRGB(255, 0, 0)),
         ColorSequenceKeypoint.new(0.16, Color3.fromRGB(255, 127, 0)),
         ColorSequenceKeypoint.new(0.33, Color3.fromRGB(255, 255, 0)),
@@ -110,14 +106,14 @@ RunService.RenderStepped:Connect(function(dt)
     OpenBtnStrokeGradient.Rotation = rotation
 end)
 
--- 5. Tiêu Đề NoobHub
+-- 5. Tiêu Đề NoobGroupDev
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.Position = UDim2.new(0, 0, 0, 5)
 Title.BackgroundTransparency = 1
-Title.Text = "👑 NoobHub 👑"
+Title.Text = "NoobGroupDev"
 Title.Font = Enum.Font.FredokaOne
-Title.TextSize = 32
+Title.TextSize = 30
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
 Title.TextStrokeTransparency = 0
 Title.Parent = MainFrame
@@ -153,7 +149,7 @@ BtnStroke.Thickness = 2
 BtnStroke.Color = Color3.fromRGB(255, 255, 255)
 BtnStroke.Parent = ToggleBtn
 
--- 7. CƠ CHẾ BẤT TỬ ĐA TẦNG (Không bị trừ máu / Chống Killbrick)
+-- 7. CƠ CHẾ BẤT TỬ ĐA TẦNG
 local isGodmode = false
 local connections = {}
 
@@ -162,10 +158,8 @@ local function applyDefense(character)
     local humanoid = character:WaitForChild("Humanoid", 3)
     if not humanoid then return end
 
-    -- Ngăn trạng thái chết
     humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
 
-    -- Lớp 1: Khóa sự kiện thay đổi máu (Khôi phục ngay khi bị trừ)
     local healthConn = humanoid:GetPropertyChangedSignal("Health"):Connect(function()
         if isGodmode and humanoid.Health < humanoid.MaxHealth then
             humanoid.Health = humanoid.MaxHealth
@@ -173,7 +167,6 @@ local function applyDefense(character)
     end)
     table.insert(connections, healthConn)
 
-    -- Lớp 2: Xóa TouchInterest trên các bộ phận để bẫy không nhận diện được
     for _, part in pairs(character:GetDescendants()) do
         if part:IsA("BasePart") then
             for _, child in pairs(part:GetChildren()) do
@@ -184,7 +177,6 @@ local function applyDefense(character)
         end
     end
 
-    -- Lớp 3: Liên tục giữ máu tối đa qua RenderStepped
     local stepConn = RunService.RenderStepped:Connect(function()
         if isGodmode and humanoid then
             humanoid.Health = humanoid.MaxHealth
