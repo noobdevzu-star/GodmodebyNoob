@@ -1,6 +1,6 @@
 -- ==========================================
--- 🌈 NOOBGROUPDEV - ANIMATION FIX V6 🌈
--- Tính năng: Bất tử giữ nguyên hoạt ảnh + Chống Bẫy
+-- 🌈 NOOBGROUPDEV - COMBAT & OBBY MASTER V9 🌈
+-- Tính năng: Bất tử Bẫy + Siêu Hitbox (Hack tầm đánh)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -18,12 +18,11 @@ ScreenGui.Name = "NoobHubMenu"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- Nút Thu Nhỏ Logo
+-- Nút Thu Nhỏ (Vương Miện)
 local OpenBtn = Instance.new("ImageButton")
 OpenBtn.Size = UDim2.new(0, 60, 0, 60)
 OpenBtn.Position = UDim2.new(0, 20, 0, 20)
 OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
--- Đang để logo Roblox tạm thời. Thay ID của bạn vào dải số bên dưới khi upload thành công:
 OpenBtn.Image = "rbxassetid://4483345998" 
 OpenBtn.Active = true
 OpenBtn.Draggable = true
@@ -39,10 +38,10 @@ OpenStroke.Thickness = 3
 OpenStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 OpenStroke.Parent = OpenBtn
 
--- Khung Menu Chính
+-- Khung Menu Chính (Kéo dài thêm để chứa 2 nút)
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 320, 0, 190)
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -95)
+MainFrame.Size = UDim2.new(0, 320, 0, 240)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
 MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 MainFrame.Active = true
 MainFrame.Draggable = true
@@ -105,7 +104,7 @@ RunService.RenderStepped:Connect(function(dt)
     OpenBtnStrokeGradient.Rotation = rotation
 end)
 
--- Tiêu Đề NoobGroupDev
+-- Tiêu Đề
 local Title = Instance.new("TextLabel")
 Title.Size = UDim2.new(1, 0, 0, 45)
 Title.Position = UDim2.new(0, 0, 0, 5)
@@ -121,105 +120,101 @@ local SubTitle = Instance.new("TextLabel")
 SubTitle.Size = UDim2.new(1, 0, 0, 20)
 SubTitle.Position = UDim2.new(0, 0, 0, 45)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Safe Godmode V6"
+SubTitle.Text = "Combat & Obby Hub V9"
 SubTitle.Font = Enum.Font.GothamBold
 SubTitle.TextSize = 14
 SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
 SubTitle.TextStrokeTransparency = 0.2
 SubTitle.Parent = MainFrame
 
--- Nút Toggle Bật/Tắt
-local ToggleBtn = Instance.new("TextButton")
-ToggleBtn.Size = UDim2.new(0, 220, 0, 45)
-ToggleBtn.Position = UDim2.new(0.5, -110, 0, 100)
-ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ToggleBtn.Text = "🔴 Bất Tử: TẮT"
-ToggleBtn.Font = Enum.Font.GothamBold
-ToggleBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-ToggleBtn.TextSize = 18
-ToggleBtn.Parent = MainFrame
+-- ==========================================
+-- TÍNH NĂNG 1: BẤT TỬ BẪY (Dành cho Parkour)
+-- ==========================================
+local ObbyBtn = Instance.new("TextButton")
+ObbyBtn.Size = UDim2.new(0, 220, 0, 40)
+ObbyBtn.Position = UDim2.new(0.5, -110, 0, 85)
+ObbyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+ObbyBtn.Text = "🔴 Bất Tử Bẫy: TẮT"
+ObbyBtn.Font = Enum.Font.GothamBold
+ObbyBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+ObbyBtn.TextSize = 16
+ObbyBtn.Parent = MainFrame
 
-local BtnCorner = Instance.new("UICorner")
-BtnCorner.CornerRadius = UDim.new(0, 8)
-BtnCorner.Parent = ToggleBtn
+Instance.new("UICorner", ObbyBtn).CornerRadius = UDim.new(0, 8)
+local Stroke1 = Instance.new("UIStroke", ObbyBtn)
+Stroke1.Thickness = 2; Stroke1.Color = Color3.fromRGB(255, 255, 255)
 
-local BtnStroke = Instance.new("UIStroke")
-BtnStroke.Thickness = 2
-BtnStroke.Color = Color3.fromRGB(255, 255, 255)
-BtnStroke.Parent = ToggleBtn
+local isObbyMode = false
+local obbyLoop = nil
 
--- CƠ CHẾ BẤT TỬ AN TOÀN (Giữ nguyên Animation)
-local isGodmode = false
-local connections = {}
-
-local function removeKillBricks(char)
-    for _, v in pairs(char:GetDescendants()) do
-        if v:IsA("TouchTransmitter") then
-            v:Destroy()
-        end
-    end
-end
-
-local function applyGodmode(char)
-    if not char then return end
-    local hum = char:WaitForChild("Humanoid", 3)
-    if not hum then return end
-
-    -- Khóa trạng thái chết
-    hum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
-
-    -- Xóa bẫy có sẵn trên cơ thể
-    removeKillBricks(char)
-
-    -- Liên tục bơm máu tối đa và xóa bẫy mới xuất hiện
-    local stepConn = RunService.RenderStepped:Connect(function()
-        if hum and isGodmode then
-            hum.MaxHealth = math.huge
-            hum.Health = math.huge
-        end
-    end)
-    table.insert(connections, stepConn)
-
-    local childConn = char.DescendantAdded:Connect(function(v)
-        if isGodmode and v:IsA("TouchTransmitter") then
-            task.wait()
-            v:Destroy()
-        end
-    end)
-    table.insert(connections, childConn)
-end
-
-local function cleanDefense()
-    for _, conn in pairs(connections) do
-        if conn then conn:Disconnect() end
-    end
-    connections = {}
-    
-    local char = Player.Character
-    if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.MaxHealth = 100
-        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
-    end
-end
-
-ToggleBtn.MouseButton1Click:Connect(function()
-    isGodmode = not isGodmode
-    if isGodmode then
-        ToggleBtn.Text = "🟢 Bất Tử: ĐANG BẬT"
-        ToggleBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        applyGodmode(Player.Character)
+ObbyBtn.MouseButton1Click:Connect(function()
+    isObbyMode = not isObbyMode
+    if isObbyMode then
+        ObbyBtn.Text = "🟢 Bất Tử Bẫy: BẬT"
+        ObbyBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
+        ObbyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        
+        obbyLoop = RunService.Heartbeat:Connect(function()
+            if Player.Character then
+                for _, part in pairs(Player.Character:GetDescendants()) do
+                    if part:IsA("BasePart") then part.CanTouch = false end
+                end
+            end
+        end)
     else
-        ToggleBtn.Text = "🔴 Bất Tử: TẮT"
-        ToggleBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-        ToggleBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        cleanDefense()
+        ObbyBtn.Text = "🔴 Bất Tử Bẫy: TẮT"
+        ObbyBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+        ObbyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        if obbyLoop then obbyLoop:Disconnect() obbyLoop = nil end
+        if Player.Character then
+            for _, part in pairs(Player.Character:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanTouch = true end
+            end
+        end
     end
 end)
 
-Player.CharacterAdded:Connect(function(char)
-    if isGodmode then
-        task.wait(0.5)
-        applyGodmode(char)
+-- ==========================================
+-- TÍNH NĂNG 2: SIÊU HITBOX (Dành cho Đánh Nhau)
+-- ==========================================
+local CombatBtn = Instance.new("TextButton")
+CombatBtn.Size = UDim2.new(0, 220, 0, 40)
+CombatBtn.Position = UDim2.new(0.5, -110, 0, 135)
+CombatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+CombatBtn.Text = "🔴 Siêu Hitbox: TẮT"
+CombatBtn.Font = Enum.Font.GothamBold
+CombatBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+CombatBtn.TextSize = 16
+CombatBtn.Parent = MainFrame
+
+Instance.new("UICorner", CombatBtn).CornerRadius = UDim.new(0, 8)
+local Stroke2 = Instance.new("UIStroke", CombatBtn)
+Stroke2.Thickness = 2; Stroke2.Color = Color3.fromRGB(255, 255, 255)
+
+local isCombatMode = false
+local combatLoop = nil
+
+CombatBtn.MouseButton1Click:Connect(function()
+    isCombatMode = not isCombatMode
+    if isCombatMode then
+        CombatBtn.Text = "🟢 Siêu Hitbox: BẬT"
+        CombatBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
+        CombatBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
+        
+        combatLoop = RunService.RenderStepped:Connect(function()
+            -- Phóng to người chơi khác
+            for _, p in pairs(Players:GetPlayers()) do
+                if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
+                    p.Character.HumanoidRootPart.Size = Vector3.new(30, 30, 30) -- Phóng to gấp 30 lần
+                    p.Character.HumanoidRootPart.Transparency = 0.7 -- Làm mờ để không cản tầm nhìn
+                    p.Character.HumanoidRootPart.CanCollide = false
+                end
+            end
+        end)
+    else
+        CombatBtn.Text = "🔴 Siêu Hitbox: TẮT"
+        CombatBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
+        CombatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+        if combatLoop then combatLoop:Disconnect() combatLoop = nil end
     end
 end)
