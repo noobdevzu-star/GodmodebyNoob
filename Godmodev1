@@ -1,13 +1,15 @@
 -- ==========================================
--- 🌈 NOOBGROUPDEV - COMBAT & OBBY MASTER V9 🌈
--- Tính năng: Bất tử Bẫy + Siêu Hitbox (Hack tầm đánh)
+-- 🌈 NOOBGROUPDEV - FREE FIRE EDITION V10 🌈
+-- Tính năng: ESP, Aimbot Head/Neck, Auto-Shoot
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
 local Players = game:GetService("Players")
 local RunService = game:GetService("RunService")
+local UserInputService = game:GetService("UserInputService")
 
 local Player = Players.LocalPlayer
+local Camera = workspace.CurrentCamera
 
 for _, v in pairs(CoreGui:GetChildren()) do
     if v.Name == "NoobHubMenu" then v:Destroy() end
@@ -18,7 +20,7 @@ ScreenGui.Name = "NoobHubMenu"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- Nút Thu Nhỏ (Vương Miện)
+-- Nút Thu Nhỏ Logo
 local OpenBtn = Instance.new("ImageButton")
 OpenBtn.Size = UDim2.new(0, 60, 0, 60)
 OpenBtn.Position = UDim2.new(0, 20, 0, 20)
@@ -28,28 +30,19 @@ OpenBtn.Active = true
 OpenBtn.Draggable = true
 OpenBtn.Visible = false
 OpenBtn.Parent = ScreenGui
+Instance.new("UICorner", OpenBtn).CornerRadius = UDim.new(1, 0)
+local OpenStroke = Instance.new("UIStroke", OpenBtn)
+OpenStroke.Thickness = 3; OpenStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 
-local OpenCorner = Instance.new("UICorner")
-OpenCorner.CornerRadius = UDim.new(1, 0)
-OpenCorner.Parent = OpenBtn
-
-local OpenStroke = Instance.new("UIStroke")
-OpenStroke.Thickness = 3
-OpenStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-OpenStroke.Parent = OpenBtn
-
--- Khung Menu Chính (Kéo dài thêm để chứa 2 nút)
+-- Khung Menu Chính
 local MainFrame = Instance.new("Frame")
-MainFrame.Size = UDim2.new(0, 320, 0, 240)
-MainFrame.Position = UDim2.new(0.5, -160, 0.5, -120)
+MainFrame.Size = UDim2.new(0, 320, 0, 280)
+MainFrame.Position = UDim2.new(0.5, -160, 0.5, -140)
 MainFrame.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 MainFrame.Active = true
 MainFrame.Draggable = true
 MainFrame.Parent = ScreenGui
-
-local UICorner = Instance.new("UICorner")
-UICorner.CornerRadius = UDim.new(0, 15)
-UICorner.Parent = MainFrame
+Instance.new("UICorner", MainFrame).CornerRadius = UDim.new(0, 15)
 
 local CloseBtn = Instance.new("TextButton")
 CloseBtn.Size = UDim2.new(0, 30, 0, 30)
@@ -65,7 +58,6 @@ CloseBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = false
     OpenBtn.Visible = true
 end)
-
 OpenBtn.MouseButton1Click:Connect(function()
     MainFrame.Visible = true
     OpenBtn.Visible = false
@@ -88,133 +80,192 @@ local function applyRainbow(instance)
 end
 
 local BgGradient = applyRainbow(MainFrame)
-local UIStroke = Instance.new("UIStroke")
-UIStroke.Thickness = 6
-UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
-UIStroke.Parent = MainFrame
+local UIStroke = Instance.new("UIStroke", MainFrame)
+UIStroke.Thickness = 6; UIStroke.ApplyStrokeMode = Enum.ApplyStrokeMode.Border
 local StrokeGradient = applyRainbow(UIStroke)
 local OpenBtnStrokeGradient = applyRainbow(OpenStroke)
 
-local rotation = 0
 RunService.RenderStepped:Connect(function(dt)
-    rotation = rotation + (dt * 45)
-    if rotation >= 360 then rotation = 0 end
-    BgGradient.Rotation = rotation
-    StrokeGradient.Rotation = -rotation
-    OpenBtnStrokeGradient.Rotation = rotation
+    local speed = dt * 45
+    BgGradient.Rotation = (BgGradient.Rotation + speed) % 360
+    StrokeGradient.Rotation = -BgGradient.Rotation
+    OpenBtnStrokeGradient.Rotation = BgGradient.Rotation
 end)
 
 -- Tiêu Đề
 local Title = Instance.new("TextLabel")
-Title.Size = UDim2.new(1, 0, 0, 45)
+Title.Size = UDim2.new(1, 0, 0, 35)
 Title.Position = UDim2.new(0, 0, 0, 5)
 Title.BackgroundTransparency = 1
 Title.Text = "NoobGroupDev"
 Title.Font = Enum.Font.FredokaOne
-Title.TextSize = 30
+Title.TextSize = 28
 Title.TextColor3 = Color3.fromRGB(255, 255, 255)
-Title.TextStrokeTransparency = 0
 Title.Parent = MainFrame
 
 local SubTitle = Instance.new("TextLabel")
-SubTitle.Size = UDim2.new(1, 0, 0, 20)
-SubTitle.Position = UDim2.new(0, 0, 0, 45)
+SubTitle.Size = UDim2.new(1, 0, 0, 15)
+SubTitle.Position = UDim2.new(0, 0, 0, 35)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Combat & Obby Hub V9"
+SubTitle.Text = "Free Fire Edition V10"
 SubTitle.Font = Enum.Font.GothamBold
-SubTitle.TextSize = 14
+SubTitle.TextSize = 12
 SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
-SubTitle.TextStrokeTransparency = 0.2
 SubTitle.Parent = MainFrame
 
+-- Khung Cuộn (Chứa các nút chức năng)
+local ScrollFrame = Instance.new("ScrollingFrame")
+ScrollFrame.Size = UDim2.new(1, -20, 1, -65)
+ScrollFrame.Position = UDim2.new(0, 10, 0, 55)
+ScrollFrame.BackgroundTransparency = 1
+ScrollFrame.ScrollBarThickness = 4
+ScrollFrame.CanvasSize = UDim2.new(0, 0, 0, 250)
+ScrollFrame.Parent = MainFrame
+
+local UIListLayout = Instance.new("UIListLayout")
+UIListLayout.Parent = ScrollFrame
+UIListLayout.HorizontalAlignment = Enum.HorizontalAlignment.Center
+UIListLayout.Padding = UDim.new(0, 8)
+
+local function createButton(name, textOff, textOn)
+    local btn = Instance.new("TextButton")
+    btn.Size = UDim2.new(0, 220, 0, 35)
+    btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
+    btn.Text = "🔴 " .. textOff
+    btn.Font = Enum.Font.GothamBold
+    btn.TextColor3 = Color3.fromRGB(255, 75, 75)
+    btn.TextSize = 14
+    btn.Parent = ScrollFrame
+    Instance.new("UICorner", btn).CornerRadius = UDim.new(0, 6)
+    local stroke = Instance.new("UIStroke", btn)
+    stroke.Thickness = 2; stroke.Color = Color3.fromRGB(255, 255, 255)
+    return btn
+end
+
 -- ==========================================
--- TÍNH NĂNG 1: BẤT TỬ BẪY (Dành cho Parkour)
+-- LOGIC HỆ THỐNG CHIẾN ĐẤU
 -- ==========================================
-local ObbyBtn = Instance.new("TextButton")
-ObbyBtn.Size = UDim2.new(0, 220, 0, 40)
-ObbyBtn.Position = UDim2.new(0.5, -110, 0, 85)
-ObbyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-ObbyBtn.Text = "🔴 Bất Tử Bẫy: TẮT"
-ObbyBtn.Font = Enum.Font.GothamBold
-ObbyBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-ObbyBtn.TextSize = 16
-ObbyBtn.Parent = MainFrame
+local ESPBtn = createButton("ESP", "Định Vị FF: TẮT", "Định Vị FF: BẬT")
+local AimbotBtn = createButton("Aimbot", "Ghim Tâm: TẮT", "Ghim Tâm: BẬT")
+local AimPartBtn = createButton("AimPart", "Mục Tiêu: ĐẦU (Head)", "Mục Tiêu: CỔ (Neck)")
+local AutoShootBtn = createButton("AutoShoot", "Tự Động Bắn: TẮT", "Tự Động Bắn: BẬT")
 
-Instance.new("UICorner", ObbyBtn).CornerRadius = UDim.new(0, 8)
-local Stroke1 = Instance.new("UIStroke", ObbyBtn)
-Stroke1.Thickness = 2; Stroke1.Color = Color3.fromRGB(255, 255, 255)
+local isESP = false
+local isAimbot = false
+local aimPart = "Head" -- Mặc định ngắm đầu
+local isAutoShoot = false
+local aimbotTarget = nil
 
-local isObbyMode = false
-local obbyLoop = nil
+-- Tự động đổi Torso/UpperTorso tùy theo cấu trúc nhân vật
+local function getNeckPart(char)
+    if char:FindFirstChild("UpperTorso") then return "UpperTorso" end
+    if char:FindFirstChild("Torso") then return "Torso" end
+    return "Head"
+end
 
-ObbyBtn.MouseButton1Click:Connect(function()
-    isObbyMode = not isObbyMode
-    if isObbyMode then
-        ObbyBtn.Text = "🟢 Bất Tử Bẫy: BẬT"
-        ObbyBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
-        ObbyBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        
-        obbyLoop = RunService.Heartbeat:Connect(function()
-            if Player.Character then
-                for _, part in pairs(Player.Character:GetDescendants()) do
-                    if part:IsA("BasePart") then part.CanTouch = false end
+local function getClosestPlayer()
+    local closest = nil
+    local shortestDist = math.huge
+    local mousePos = UserInputService:GetMouseLocation()
+    
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+            local targetNode = aimPart == "Head" and "Head" or getNeckPart(p.Character)
+            local targetObj = p.Character:FindFirstChild(targetNode)
+            
+            if targetObj then
+                local pos, onScreen = Camera:WorldToViewportPoint(targetObj.Position)
+                if onScreen then
+                    local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                    if dist < shortestDist then
+                        shortestDist = dist
+                        closest = p
+                    end
                 end
             end
-        end)
-    else
-        ObbyBtn.Text = "🔴 Bất Tử Bẫy: TẮT"
-        ObbyBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-        ObbyBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        if obbyLoop then obbyLoop:Disconnect() obbyLoop = nil end
-        if Player.Character then
-            for _, part in pairs(Player.Character:GetDescendants()) do
-                if part:IsA("BasePart") then part.CanTouch = true end
+        end
+    end
+    return closest
+end
+
+-- Vòng lặp chính xử lý ESP & Aimbot
+RunService.RenderStepped:Connect(function()
+    -- 1. ESP (Phát sáng viền đỏ Free Fire)
+    for _, p in pairs(Players:GetPlayers()) do
+        if p ~= Player and p.Character then
+            if isESP and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                if not p.Character:FindFirstChild("FF_ESP") then
+                    local hl = Instance.new("Highlight")
+                    hl.Name = "FF_ESP"
+                    hl.FillColor = Color3.fromRGB(255, 0, 0)
+                    hl.OutlineColor = Color3.fromRGB(255, 255, 0)
+                    hl.FillTransparency = 0.5
+                    hl.OutlineTransparency = 0
+                    hl.Parent = p.Character
+                end
+            else
+                local hl = p.Character:FindFirstChild("FF_ESP")
+                if hl then hl:Destroy() end
+            end
+        end
+    end
+
+    -- 2. Aimbot & Auto-Shoot
+    if isAimbot then
+        if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) or isAimbot then
+            local target = getClosestPlayer()
+            if target and target.Character then
+                local targetNode = aimPart == "Head" and "Head" or getNeckPart(target.Character)
+                local aimObj = target.Character:FindFirstChild(targetNode)
+                
+                if aimObj then
+                    -- Khóa tâm vào mục tiêu (Aimlock)
+                    Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimObj.Position)
+                    
+                    -- Tự động bóp cò (Auto-Shoot)
+                    if isAutoShoot and mouse1click then
+                        mouse1click()
+                    end
+                end
             end
         end
     end
 end)
 
--- ==========================================
--- TÍNH NĂNG 2: SIÊU HITBOX (Dành cho Đánh Nhau)
--- ==========================================
-local CombatBtn = Instance.new("TextButton")
-CombatBtn.Size = UDim2.new(0, 220, 0, 40)
-CombatBtn.Position = UDim2.new(0.5, -110, 0, 135)
-CombatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-CombatBtn.Text = "🔴 Siêu Hitbox: TẮT"
-CombatBtn.Font = Enum.Font.GothamBold
-CombatBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-CombatBtn.TextSize = 16
-CombatBtn.Parent = MainFrame
-
-Instance.new("UICorner", CombatBtn).CornerRadius = UDim.new(0, 8)
-local Stroke2 = Instance.new("UIStroke", CombatBtn)
-Stroke2.Thickness = 2; Stroke2.Color = Color3.fromRGB(255, 255, 255)
-
-local isCombatMode = false
-local combatLoop = nil
-
-CombatBtn.MouseButton1Click:Connect(function()
-    isCombatMode = not isCombatMode
-    if isCombatMode then
-        CombatBtn.Text = "🟢 Siêu Hitbox: BẬT"
-        CombatBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
-        CombatBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        
-        combatLoop = RunService.RenderStepped:Connect(function()
-            -- Phóng to người chơi khác
-            for _, p in pairs(Players:GetPlayers()) do
-                if p ~= Player and p.Character and p.Character:FindFirstChild("HumanoidRootPart") then
-                    p.Character.HumanoidRootPart.Size = Vector3.new(30, 30, 30) -- Phóng to gấp 30 lần
-                    p.Character.HumanoidRootPart.Transparency = 0.7 -- Làm mờ để không cản tầm nhìn
-                    p.Character.HumanoidRootPart.CanCollide = false
-                end
-            end
-        end)
+-- Sự kiện click các nút
+local function toggleButton(btn, state, textOff, textOn)
+    if state then
+        btn.Text = "🟢 " .. textOn
+        btn.TextColor3 = Color3.fromRGB(75, 255, 75)
+        btn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
     else
-        CombatBtn.Text = "🔴 Siêu Hitbox: TẮT"
-        CombatBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
-        CombatBtn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
-        if combatLoop then combatLoop:Disconnect() combatLoop = nil end
+        btn.Text = "🔴 " .. textOff
+        btn.TextColor3 = Color3.fromRGB(255, 75, 75)
+        btn.BackgroundColor3 = Color3.fromRGB(30, 30, 30)
     end
+end
+
+ESPBtn.MouseButton1Click:Connect(function()
+    isESP = not isESP
+    toggleButton(ESPBtn, isESP, "Định Vị FF: TẮT", "Định Vị FF: BẬT")
+end)
+
+AimbotBtn.MouseButton1Click:Connect(function()
+    isAimbot = not isAimbot
+    toggleButton(AimbotBtn, isAimbot, "Ghim Tâm: TẮT", "Ghim Tâm: BẬT")
+end)
+
+AimPartBtn.MouseButton1Click:Connect(function()
+    if aimPart == "Head" then
+        aimPart = "Neck"
+        toggleButton(AimPartBtn, true, "", "Mục Tiêu: CỔ (Neck)")
+    else
+        aimPart = "Head"
+        toggleButton(AimPartBtn, false, "Mục Tiêu: ĐẦU (Head)", "")
+    end
+end)
+
+AutoShootBtn.MouseButton1Click:Connect(function()
+    isAutoShoot = not isAutoShoot
+    toggleButton(AutoShootBtn, isAutoShoot, "Tự Động Bắn: TẮT", "Tự Động Bắn: BẬT")
 end)
