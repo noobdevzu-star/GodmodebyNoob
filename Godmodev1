@@ -1,6 +1,6 @@
 -- ==========================================
--- 🌈 NOOBGROUPDEV GODMODE - RAINBOW PRO V4 🌈
--- Tính năng: Nút ẩn bằng Ảnh Logo + Auto Restore Health
+-- 🌈 NOOBGROUPDEV - ABSOLUTE GODMODE V5 🌈
+-- Tính năng: Auto Decal Fix + Bất tử tuyệt đối (Chống Hit/Touch)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -20,12 +20,13 @@ ScreenGui.Name = "NoobHubMenu"
 ScreenGui.Parent = CoreGui
 ScreenGui.ResetOnSpawn = false
 
--- 2. NÚT THU NHỎ BẰNG ẢNH LOGO
+-- 2. NÚT THU NHỎ LOGO (Tự động fix Decal ID)
 local OpenBtn = Instance.new("ImageButton")
 OpenBtn.Size = UDim2.new(0, 60, 0, 60)
 OpenBtn.Position = UDim2.new(0, 20, 0, 20)
 OpenBtn.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
-OpenBtn.Image = "rbxassetid://135921149892821" -- Đã chèn ID Logo của bạn
+-- Sử dụng rbxthumb để ép load Decal ID thành ảnh
+OpenBtn.Image = "rbxthumb://type=Asset&id=135921149892821&w=420&h=420"
 OpenBtn.Active = true
 OpenBtn.Draggable = true
 OpenBtn.Visible = false
@@ -122,7 +123,7 @@ local SubTitle = Instance.new("TextLabel")
 SubTitle.Size = UDim2.new(1, 0, 0, 20)
 SubTitle.Position = UDim2.new(0, 0, 0, 45)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Anti-Damage System"
+SubTitle.Text = "Absolute Godmode"
 SubTitle.Font = Enum.Font.GothamBold
 SubTitle.TextSize = 14
 SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
@@ -149,40 +150,60 @@ BtnStroke.Thickness = 2
 BtnStroke.Color = Color3.fromRGB(255, 255, 255)
 BtnStroke.Parent = ToggleBtn
 
--- 7. CƠ CHẾ BẤT TỬ ĐA TẦNG
+-- 7. CƠ CHẾ BẤT TỬ TUYỆT ĐỐI (ANTI-TOUCH & ANTI-SERVER)
 local isGodmode = false
 local connections = {}
 
-local function applyDefense(character)
-    if not character then return end
-    local humanoid = character:WaitForChild("Humanoid", 3)
-    if not humanoid then return end
+local function applyAbsoluteGodmode(char)
+    if not char then return end
+    local hum = char:WaitForChild("Humanoid", 3)
+    if not hum then return end
 
-    humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+    -- Lớp 1: Bẻ gãy liên kết nhận sát thương từ máy chủ bằng cách tráo Humanoid
+    hum.Name = "FakeHum"
+    local realHum = hum:Clone()
+    realHum.Name = "Humanoid"
+    realHum.Parent = char
+    hum:Destroy()
 
-    local healthConn = humanoid:GetPropertyChangedSignal("Health"):Connect(function()
-        if isGodmode and humanoid.Health < humanoid.MaxHealth then
-            humanoid.Health = humanoid.MaxHealth
-        end
-    end)
-    table.insert(connections, healthConn)
+    workspace.CurrentCamera.CameraSubject = realHum
 
-    for _, part in pairs(character:GetDescendants()) do
-        if part:IsA("BasePart") then
-            for _, child in pairs(part:GetChildren()) do
-                if child:IsA("TouchTransmitter") then
-                    child:Destroy()
-                end
-            end
+    -- Khởi động lại hoạt ảnh để nhân vật không bị đơ
+    local animate = char:FindFirstChild("Animate")
+    if animate then
+        animate.Disabled = true
+        task.wait(0.1)
+        animate.Disabled = false
+    end
+
+    -- Lớp 2: Xóa toàn bộ điểm tiếp xúc (Bẫy, kiếm, đạn chạm vào sẽ xuyên qua)
+    for _, v in pairs(char:GetDescendants()) do
+        if v:IsA("TouchTransmitter") then
+            v:Destroy()
         end
     end
 
-    local stepConn = RunService.RenderStepped:Connect(function()
-        if isGodmode and humanoid then
-            humanoid.Health = humanoid.MaxHealth
+    -- Khóa máu ở mức vô cực
+    realHum.MaxHealth = 999999999
+    realHum.Health = 999999999
+    realHum:SetStateEnabled(Enum.HumanoidStateType.Dead, false)
+
+    -- Lớp 3: Bơm máu lại ngay lập tức mỗi khung hình
+    local stepConn = RunService.Heartbeat:Connect(function()
+        if realHum then
+            realHum.Health = 999999999
         end
     end)
     table.insert(connections, stepConn)
+
+    -- Lớp 4: Xóa liên tục các điểm chạm mới sinh ra (Ví dụ khi bạn cầm vũ khí mới)
+    local childConn = char.DescendantAdded:Connect(function(v)
+        if v:IsA("TouchTransmitter") then
+            task.wait()
+            v:Destroy()
+        end
+    end)
+    table.insert(connections, childConn)
 end
 
 local function cleanDefense()
@@ -193,7 +214,7 @@ local function cleanDefense()
     
     local char = Player.Character
     if char and char:FindFirstChild("Humanoid") then
-        char.Humanoid:SetStateEnabled(Enum.HumanoidStateType.Dead, true)
+        char.Humanoid.Health = 0 -- Ép chết để game reset lại cơ thể bình thường
     end
 end
 
@@ -203,7 +224,7 @@ ToggleBtn.MouseButton1Click:Connect(function()
         ToggleBtn.Text = "🟢 Bất Tử: ĐANG BẬT"
         ToggleBtn.TextColor3 = Color3.fromRGB(75, 255, 75)
         ToggleBtn.BackgroundColor3 = Color3.fromRGB(50, 50, 50)
-        applyDefense(Player.Character)
+        applyAbsoluteGodmode(Player.Character)
     else
         ToggleBtn.Text = "🔴 Bất Tử: TẮT"
         ToggleBtn.TextColor3 = Color3.fromRGB(255, 75, 75)
@@ -215,6 +236,6 @@ end)
 Player.CharacterAdded:Connect(function(char)
     if isGodmode then
         task.wait(0.5)
-        applyDefense(char)
+        applyAbsoluteGodmode(char)
     end
 end)
