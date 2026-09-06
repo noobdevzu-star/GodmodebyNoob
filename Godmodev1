@@ -1,6 +1,6 @@
 -- ==========================================
--- 🌈 NOOBGROUPDEV - ULTIMATE HUB V11 🌈
--- Tính năng: All in One (Bất tử, Hitbox, Aimbot, ESP)
+-- 🌈 NOOBGROUPDEV - ULTIMATE HUB V12 🌈
+-- Fix lỗi ngưng hoạt động (Anti-Crash Pcall)
 -- ==========================================
 
 local CoreGui = game:GetService("CoreGui")
@@ -107,13 +107,13 @@ local SubTitle = Instance.new("TextLabel")
 SubTitle.Size = UDim2.new(1, 0, 0, 15)
 SubTitle.Position = UDim2.new(0, 0, 0, 35)
 SubTitle.BackgroundTransparency = 1
-SubTitle.Text = "Ultimate Hub V11"
+SubTitle.Text = "Ultimate Hub V12 (Anti-Crash)"
 SubTitle.Font = Enum.Font.GothamBold
 SubTitle.TextSize = 12
 SubTitle.TextColor3 = Color3.fromRGB(220, 220, 220)
 SubTitle.Parent = MainFrame
 
--- Khung Cuộn (Chứa 7 nút chức năng)
+-- Khung Cuộn
 local ScrollFrame = Instance.new("ScrollingFrame")
 ScrollFrame.Size = UDim2.new(1, -20, 1, -65)
 ScrollFrame.Position = UDim2.new(0, 10, 0, 55)
@@ -174,7 +174,7 @@ local states = {
     AimPart = "Head"
 }
 
--- LOGIC XỬ LÝ LIÊN TỤC
+-- HÀM HỖ TRỢ
 local function getNeckPart(char)
     if char:FindFirstChild("UpperTorso") then return "UpperTorso" end
     if char:FindFirstChild("Torso") then return "Torso" end
@@ -186,82 +186,93 @@ local function getClosestPlayer()
     local shortestDist = math.huge
     local mousePos = UserInputService:GetMouseLocation()
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-            local targetNode = states.AimPart == "Head" and "Head" or getNeckPart(p.Character)
-            local targetObj = p.Character:FindFirstChild(targetNode)
-            if targetObj then
-                local pos, onScreen = Camera:WorldToViewportPoint(targetObj.Position)
-                if onScreen then
-                    local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
-                    if dist < shortestDist then shortestDist = dist closest = p end
+        if p ~= Player and p.Character then
+            pcall(function()
+                if p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
+                    local targetNode = states.AimPart == "Head" and "Head" or getNeckPart(p.Character)
+                    local targetObj = p.Character:FindFirstChild(targetNode)
+                    if targetObj then
+                        local pos, onScreen = Camera:WorldToViewportPoint(targetObj.Position)
+                        if onScreen then
+                            local dist = (Vector2.new(pos.X, pos.Y) - mousePos).Magnitude
+                            if dist < shortestDist then shortestDist = dist closest = p end
+                        end
+                    end
                 end
-            end
+            end)
         end
     end
     return closest
 end
 
+-- VÒNG LẶP CHÍNH (Đã bọc Pcall chống crash)
 RunService.RenderStepped:Connect(function()
-    local char = Player.Character
-    
-    -- 1. Bất Tử Máu
-    if states.Godmode and char and char:FindFirstChild("Humanoid") then
-        char.Humanoid.MaxHealth = math.huge
-        char.Humanoid.Health = math.huge
-    end
-    
-    -- 2. Chống Bẫy & Chống Rơi
-    if states.Obby and char then
-        for _, part in pairs(char:GetDescendants()) do
-            if part:IsA("BasePart") then part.CanTouch = false end
+    -- 1. Xử lý bản thân
+    pcall(function()
+        local char = Player.Character
+        if states.Godmode and char and char:FindFirstChild("Humanoid") then
+            char.Humanoid.MaxHealth = math.huge
+            char.Humanoid.Health = math.huge
         end
-        local root = char:FindFirstChild("HumanoidRootPart")
-        if root and root.Position.Y < workspace.FallenPartsDestroyHeight + 50 then
-            root.CFrame = root.CFrame + Vector3.new(0, 150, 0)
+        
+        if states.Obby and char then
+            for _, part in pairs(char:GetDescendants()) do
+                if part:IsA("BasePart") then part.CanTouch = false end
+            end
+            local root = char:FindFirstChild("HumanoidRootPart")
+            if root and root.Position.Y < workspace.FallenPartsDestroyHeight + 50 then
+                root.CFrame = root.CFrame + Vector3.new(0, 150, 0)
+            end
         end
-    end
+    end)
 
-    -- 3. ESP & Hitbox
+    -- 2. Xử lý kẻ địch (ESP / Hitbox)
     for _, p in pairs(Players:GetPlayers()) do
-        if p ~= Player and p.Character then
-            -- Hitbox
-            if states.Hitbox and p.Character:FindFirstChild("HumanoidRootPart") then
-                p.Character.HumanoidRootPart.Size = Vector3.new(25, 25, 25)
-                p.Character.HumanoidRootPart.Transparency = 0.7
-                p.Character.HumanoidRootPart.CanCollide = false
-            end
-            
-            -- ESP
-            if states.ESP and p.Character:FindFirstChild("Humanoid") and p.Character.Humanoid.Health > 0 then
-                if not p.Character:FindFirstChild("FF_ESP") then
-                    local hl = Instance.new("Highlight")
-                    hl.Name = "FF_ESP"
-                    hl.FillColor = Color3.fromRGB(255, 0, 0)
-                    hl.OutlineColor = Color3.fromRGB(255, 255, 0)
-                    hl.FillTransparency = 0.5
-                    hl.Parent = p.Character
+        if p ~= Player then
+            pcall(function()
+                local char = p.Character
+                if char then
+                    if states.Hitbox and char:FindFirstChild("HumanoidRootPart") then
+                        char.HumanoidRootPart.Size = Vector3.new(25, 25, 25)
+                        char.HumanoidRootPart.Transparency = 0.7
+                        char.HumanoidRootPart.CanCollide = false
+                    end
+                    
+                    if states.ESP and char:FindFirstChild("Humanoid") and char.Humanoid.Health > 0 then
+                        if not char:FindFirstChild("FF_ESP") then
+                            local hl = Instance.new("Highlight")
+                            hl.Name = "FF_ESP"
+                            hl.FillColor = Color3.fromRGB(255, 0, 0)
+                            hl.OutlineColor = Color3.fromRGB(255, 255, 0)
+                            hl.FillTransparency = 0.5
+                            hl.Parent = char
+                        end
+                    else
+                        local hl = char:FindFirstChild("FF_ESP")
+                        if hl then hl:Destroy() end
+                    end
                 end
-            else
-                local hl = p.Character:FindFirstChild("FF_ESP")
-                if hl then hl:Destroy() end
-            end
+            end)
         end
     end
 
-    -- 4. Aimbot & AutoShoot
-    if states.Aimbot then
-        if UserInputService:IsMouseButtonPressed(Enum.UserInputType.MouseButton2) or states.Aimbot then
+    -- 3. Xử lý Aimbot & AutoShoot
+    pcall(function()
+        if states.Aimbot then
             local target = getClosestPlayer()
             if target and target.Character then
                 local targetNode = states.AimPart == "Head" and "Head" or getNeckPart(target.Character)
                 local aimObj = target.Character:FindFirstChild(targetNode)
                 if aimObj then
                     Camera.CFrame = CFrame.new(Camera.CFrame.Position, aimObj.Position)
-                    if states.AutoShoot and mouse1click then mouse1click() end
+                    -- Chỉ chạy mouse1click nếu phần mềm Executor hỗ trợ
+                    if states.AutoShoot and typeof(mouse1click) == "function" then 
+                        mouse1click() 
+                    end
                 end
             end
         end
-    end
+    end)
 end)
 
 -- KẾT NỐI NÚT BẤM
@@ -269,27 +280,22 @@ GodmodeBtn.MouseButton1Click:Connect(function()
     states.Godmode = not states.Godmode
     toggleUI(GodmodeBtn, states.Godmode, "Bất Tử Máu: TẮT", "Bất Tử Máu: BẬT")
 end)
-
 ObbyBtn.MouseButton1Click:Connect(function()
     states.Obby = not states.Obby
     toggleUI(ObbyBtn, states.Obby, "Chống Bẫy & Rơi: TẮT", "Chống Bẫy & Rơi: BẬT")
 end)
-
 HitboxBtn.MouseButton1Click:Connect(function()
     states.Hitbox = not states.Hitbox
     toggleUI(HitboxBtn, states.Hitbox, "Siêu Hitbox: TẮT", "Siêu Hitbox: BẬT")
 end)
-
 ESPBtn.MouseButton1Click:Connect(function()
     states.ESP = not states.ESP
     toggleUI(ESPBtn, states.ESP, "Định Vị FF: TẮT", "Định Vị FF: BẬT")
 end)
-
 AimbotBtn.MouseButton1Click:Connect(function()
     states.Aimbot = not states.Aimbot
     toggleUI(AimbotBtn, states.Aimbot, "Ghim Tâm: TẮT", "Ghim Tâm: BẬT")
 end)
-
 AimPartBtn.MouseButton1Click:Connect(function()
     if states.AimPart == "Head" then
         states.AimPart = "Neck"
@@ -299,7 +305,6 @@ AimPartBtn.MouseButton1Click:Connect(function()
         toggleUI(AimPartBtn, false, "Mục Tiêu: ĐẦU (Head)", "")
     end
 end)
-
 AutoShootBtn.MouseButton1Click:Connect(function()
     states.AutoShoot = not states.AutoShoot
     toggleUI(AutoShootBtn, states.AutoShoot, "Tự Động Bắn: TẮT", "Tự Động Bắn: BẬT")
